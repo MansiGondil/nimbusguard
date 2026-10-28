@@ -1,0 +1,23 @@
+name: high-cpu
+title: High CPU usage
+description: Identify the process consuming CPU and restart it if it is not critical.
+triggers: [cpu_high]
+kinds: [threshold]
+risk: low
+requires_approval: false
+steps:
+  - action: identify_top_process
+  - action: check_process_critical
+    params: {process: "{top_process}"}
+  - action: escalate
+    when: critical
+    params: {message: "Top process {top_process} is critical - manual intervention suggested"}
+  - action: restart_process
+    params: {process: "{top_process}"}
+  - action: wait
+    params: {seconds: 120}
+  - action: verify
+    params: {metric: cpu, below: 80}
+rollback:
+  - action: notify
+    params: {message: "Restarting {top_process} did not bring CPU down on {device}; reverting to manual handling"}

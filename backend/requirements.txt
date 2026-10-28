@@ -1,0 +1,16 @@
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+SQLAlchemy[asyncio]==2.1.6
+asyncpg==0.32.0
+aiosqlite==0.22.1
+redis==8.1.0
+pydantic-settings==2.16.1
+PyJWT==2.15.1
+bcrypt==5.0.0
+cryptography==50.0.2
+numpy==2.5.4
+scikit-learn==1.9.1
+PyYAML==6.0.3
+httpx==0.28.1
+pysnmp==7.1.30
+python-multipart==0.0.32

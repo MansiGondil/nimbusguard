@@ -1,0 +1,14 @@
+# TLS termination in front of the API (WebSockets are proxied automatically).
+# For a public hostname replace "localhost" with your domain to get a
+# Let's Encrypt certificate; "tls internal" issues a local CA certificate.
+localhost {
+	tls internal
+	encode gzip
+	reverse_proxy api:8000
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+	}
+}

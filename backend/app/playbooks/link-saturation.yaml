@@ -1,0 +1,17 @@
+name: link-saturation
+title: WAN link saturation
+description: Shift bulk traffic to the backup WAN link.
+triggers: [link_saturation]
+kinds: [threshold]
+risk: low
+requires_approval: false
+steps:
+  - action: snapshot_config
+  - action: reroute_traffic
+    params: {to: backup-link, classes: [bulk, backup]}
+  - action: wait
+    params: {seconds: 60}
+  - action: verify
+    params: {metric: utilization_in, below: 0.8}
+rollback:
+  - action: restore_config

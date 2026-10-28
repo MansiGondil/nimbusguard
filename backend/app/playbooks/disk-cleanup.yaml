@@ -1,0 +1,18 @@
+name: disk-cleanup
+title: Disk full with old logs
+description: Archive and compress logs older than 7 days.
+triggers: [disk_full, disk_exhaustion]
+kinds: [threshold, prediction]
+risk: low
+impact: none
+requires_approval: false
+steps:
+  - action: archive_logs
+    params: {path: /var/log, older_than_days: 7}
+  - action: wait
+    params: {seconds: 60}
+  - action: verify
+    params: {metric: disk, below: 80}
+rollback:
+  - action: notify
+    params: {message: "Log cleanup freed too little space on {device}"}

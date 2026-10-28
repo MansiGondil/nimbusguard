@@ -1,0 +1,15 @@
+name: brute-force
+title: Brute-force attack
+description: Block the attacking source IPs at the firewall for 24 hours.
+triggers: [brute_force]
+risk: low
+impact: none
+requires_approval: false
+steps:
+  - action: block_ip
+    params: {ips: "{source_ips}", duration_hours: 24}
+  - action: notify
+    params: {message: "Blocked {source_ips} on {device} for 24h after repeated failed logins"}
+rollback:
+  - action: unblock_ip
+    params: {ips: "{source_ips}"}

@@ -1,0 +1,20 @@
+name: device-unreachable
+title: Device unreachable
+description: Confirm the outage, then power-cycle the device via out-of-band management.
+triggers: [device_down]
+risk: high
+requires_approval: true
+steps:
+  - action: ping
+  - action: escalate
+    when: reachable
+    params: {message: "{device} answers ping; collector issue suspected, not a device outage"}
+  - action: power_cycle
+    params: {method: pdu-outlet}
+  - action: wait
+    params: {seconds: 120}
+  - action: verify
+    params: {reachable: true}
+rollback:
+  - action: notify
+    params: {message: "{device} did not recover after power-cycle; dispatch on-site technician"}

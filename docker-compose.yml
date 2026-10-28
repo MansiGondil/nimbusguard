@@ -1,0 +1,58 @@
+# Full stack: TimescaleDB + Redis + API + worker + Caddy (TLS).
+#   docker compose up --build        ->  http://localhost:8080  /  https://localhost:8443
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: nimbus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nimbus-dev-password}
+      POSTGRES_DB: nimbusguard
+    volumes: [tsdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nimbus -d nimbusguard"]
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+
+  api:
+    build: .
+    env_file: [.env]
+    environment: &common
+      NG_DATABASE_URL: postgresql+asyncpg://nimbus:${POSTGRES_PASSWORD:-nimbus-dev-password}@timescaledb:5432/nimbusguard
+      NG_REDIS_URL: redis://redis:6379/0
+      NG_RUN_WORKERS: "false"
+    depends_on:
+      timescaledb: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports: ["8080:8000"]
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.worker"]
+    env_file: [.env]
+    environment: *common
+    depends_on:
+      api: { condition: service_started }
+    ports:
+      - "5514:5514/udp"   # syslog (when NG_SYSLOG_ENABLED=true)
+      - "2055:2055/udp"   # NetFlow v5 (when NG_NETFLOW_ENABLED=true)
+
+  caddy:
+    image: caddy:2.8-alpine
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    ports: ["8443:443"]
+    depends_on: [api]
+
+volumes:
+  tsdata:
+  redisdata:
+  caddydata:

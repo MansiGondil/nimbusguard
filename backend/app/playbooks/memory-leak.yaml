@@ -1,0 +1,17 @@
+name: memory-leak
+title: Memory leak / exhaustion
+description: Gracefully restart the leaking service before memory runs out.
+triggers: [memory_high, memory_exhaustion]
+kinds: [threshold, prediction]
+risk: medium
+requires_approval: false
+steps:
+  - action: snapshot_config
+  - action: restart_service
+    params: {service: "{primary_service}", mode: graceful}
+  - action: wait
+    params: {seconds: 60}
+  - action: verify
+    params: {metric: memory, below: 80}
+rollback:
+  - action: restore_config

@@ -1,0 +1,15 @@
+name: exfiltration
+title: Suspected data exfiltration
+description: Quarantine the internal host into an isolated VLAN.
+triggers: [exfiltration]
+risk: high
+impact: none
+requires_approval: true
+steps:
+  - action: quarantine_host
+    params: {host: "{source_ip}", vlan: 999}
+  - action: notify
+    params: {message: "Host {source_ip} quarantined after large upload to {destination_ip}"}
+rollback:
+  - action: release_host
+    params: {host: "{source_ip}"}
